@@ -1,0 +1,19 @@
+﻿Bluebikes,longest_journey,start_station,start_latitude,start_longtitude,start_district,start_public,start_total_docks,start_id,end_station,end_latitude,end_longtitude,end_district,end_public,end_total_docks,end_id
+2019,16.1,Glendale Square (Ferry St at Broadway),42.41427294,-71.04479656,Everett,Yes,15,392,Belgrade Ave at Walworth St,42.28634589,-71.1367213,Boston,Yes,15,373
+2018,13.74,Alewife Station at Russell Field,42.396105,-71.139459,Cambridge,Yes,23,142,Mattapan Library,42.2773889,-71.09325,Boston,Yes,15,353
+2017,10.58,Davis Square,42.396969,-71.123024,Somerville,Yes,25,100,Savin Hill T Stop - S Sydney St at Bay St,42.3106,-71.0539,Boston,Yes,14,173
+,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,
+Divvy,,start_station,start_latitude,start_longtitude,start_district,start_public,start_total_docks,start_id,end_station,end_latitude,end_longtitude,end_district,end_public,end_total_docks,end_id
+2019,32.79,Central St & Girard Ave,42.064313,-87.686152,,,15,602,63rd St Beach,41.781016,-87.57612,,,15,101
+2018,36.81,Wabash Ave & 87th St,41.736646,-87.622634,,,11,595,Central St & Girard Ave,42.064313,-87.686152,,,15,602
+2017,27.31,Western Ave & Granville Ave,41.994161,-87.689438,,,11,452,South Shore Dr & 71st St,41.766409,-87.565688,,,15,12
+,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,
+,,2017,2018,2019,Avg,,,,,,,,,,
+,Bluebikes,10.58,13.74,16.1,13.473,,,,,,,,,,
+,Divvy,27.31,36.81,32.79,32.303,,,,,,,,,,

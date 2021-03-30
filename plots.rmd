@@ -1,0 +1,35 @@
+---
+title: "Graphic Outputs"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+##### Insights into US Bikeshare Companies 
+```{r packages}
+library(ggplot2)
+```
+
+
+##### Q1. Total Trips
+
+```{r q1, echo=false}
+q1 <- read.csv(data= Q1.csv, aes(x= year_month, y = trips_bluebike))
+
+```
+
+##### Q2. Total Trips
+##### Q3. Total Trips
+##### Q4. Total Trips
+##### Q5. Total Trips
+##### Q6. Total Trips
+##### Q7. Total Trips
+
+
+
+```{r total trips, echo=FALSE}
+
+```
+
+
