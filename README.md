@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 ##### Insights into US Bikeshare Companies
 
@@ -513,3 +514,14 @@ JOIN divvy_stations e ON b.end_station_id = e.id
 Group by month
 Order by month
 ```
+=======
+# bikeshare_studies
+Data Insights into bikeshare company models
+
+How many trips were there in each month of each year?
+Which stations are showing the greatest growth rates?
+Is there a difference in growth between holiday activity and commuting activity?
+What was the longest journey? What do we know about it?
+How often do bikes need to be relocated?
+How effective are subscription systems?
+>>>>>>> 41e02e5767411fb82486d02fe186249fd4e81892
