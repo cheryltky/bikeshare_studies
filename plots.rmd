@@ -15,7 +15,9 @@ library(ggplot2)
 ##### Q1. Total Trips
 
 ```{r q1, echo=false}
-q1 <- read.csv(data= Q1.csv, aes(x= year_month, y = trips_bluebike))
+setwd("D:\\Github\\bikeshare_studies\\csvdata")
+q1 <- read.csv("Q1.csv")
+head(Q1)
 
 ```
 
