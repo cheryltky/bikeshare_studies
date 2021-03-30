@@ -9,14 +9,14 @@ knitr::opts_chunk$set(echo = FALSE)
 
 ##### Insights into US Bikeshare Companies 
 
-A case study into different bikeshare companies in the US that provide data-driven insights into overall trends in customer subscription models, seasonal and location demand. 
+###### Aims:
 
-These results will provide bikeshare companies with the ability to make data-driven decisions for potential resource allocations, maximise profits and improve customer quality care. 
++ Provide data-driven insights into overall trends in customer subscription models, seasonal and location demand. 
++ Provide bikeshare companies with the ability to make data-driven decisions for potential resource allocations, maximise profits and improve customer quality care. 
 
-Open data sources are available here:
- <http://rmarkdown.rstudio.com>.
++ [Bikeshare Companies Datasets](http://rmarkdown.rstudio.com)
 
-Find graphic outputs corresponding to the analysis questions here.
++ [Graphs corresponding to the analysis questions](http://rmarkdown.rstudio.com)
 
  **Analysis Questions with SQL queries:** 
  

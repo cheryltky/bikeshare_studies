@@ -1,16 +1,19 @@
-<<<<<<< HEAD
 
 ##### Insights into US Bikeshare Companies
 
-A case study into different bikeshare companies in the US that provide
-data-driven insights into overall trends in customer subscription
-models, seasonal and location demand.
+###### Aims:
 
-These results will provide bikeshare companies with the ability to make
-data-driven decisions for potential resource allocations, maximise
-profits and improve customer quality care.
+-   Provide data-driven insights into overall trends in customer
+    subscription models, seasonal and location demand.
 
-Open data sources are available here: <http://rmarkdown.rstudio.com>.
+-   Provide bikeshare companies with the ability to make data-driven
+    decisions for potential resource allocations, maximise profits and
+    improve customer quality care.
+
+-   [Bikeshare Companies Datasets](http://rmarkdown.rstudio.com)
+
+-   [Graphs corresponding to the analysis
+    questions](http://rmarkdown.rstudio.com)
 
 **Analysis Questions with SQL queries:**
 
@@ -514,14 +517,43 @@ JOIN divvy_stations e ON b.end_station_id = e.id
 Group by month
 Order by month
 ```
-=======
-# bikeshare_studies
-Data Insights into bikeshare company models
 
-How many trips were there in each month of each year?
-Which stations are showing the greatest growth rates?
-Is there a difference in growth between holiday activity and commuting activity?
-What was the longest journey? What do we know about it?
-How often do bikes need to be relocated?
-How effective are subscription systems?
->>>>>>> 41e02e5767411fb82486d02fe186249fd4e81892
+------------------------------------------------------------------------
+
+###### 7. *How effective are subscription systems?*
+
+``` sql
+with
+----blubikes data for 2017 and  2018
+bluebikes_data_combined as (
+select bike_id,start_time,end_time,start_station_id,end_station_id,user_type
+from bluebikes_2017
+union
+select bike_id,start_time,end_time,start_station_id,end_station_id,user_type
+from bluebikes_2018 ),
+
+
+----baywheels data for 2017 and 2018 
+baywheels_data_combined as (
+select bike_id,start_time,end_time,start_station_id,end_station_id,user_type
+from baywheels_2017
+union
+select bike_id,start_time,end_time,start_station_id,end_station_id,user_type
+from baywheels_2018 ),
+
+
+--- bike data for bluebikes and baywheels combined
+
+total_bike_data as (select bike_id,start_time,end_time,start_station_id,end_station_id,user_type,  'bluebikes' as company_name
+from bluebikes_data_combined
+union
+select bike_id,start_time,end_time,start_station_id,end_station_id,user_type,  'baywheels' as company_name
+from baywheels_data_combined)
+
+
+------ counting no of trips taken by customers and subscribes in two diff companies.
+                select count(*) as no_of_trips,user_type,  company_name
+                from total_bike_data
+                group by user_type , company_name
+                order by no_of_trips
+```
