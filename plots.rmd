@@ -35,7 +35,10 @@ bluebikes
 
 ```
 
+***
+
 ##### Q2. Total Trips
+
 ##### Q3. Total Trips
 ##### Q4. Total Trips
 ##### Q5. Total Trips
