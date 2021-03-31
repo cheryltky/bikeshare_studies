@@ -4,13 +4,11 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(warning = FALSE)
 ```
 ##### Insights into US Bikeshare Companies 
-```{r packages}
-setwd("D:\\Github\\bikeshare_studies\\csvdata")
-```
-```{r libraries}
+
+```{r libraries, include=FALSE}
 library(readr)
 library(ggplot2)
 library(dplyr)
@@ -20,18 +18,21 @@ library(scales)
 
 ##### Q1. Total Trips
 
-```{r q1-bluebiketrips, echo=false}
-
-q1 <- read.csv("https://raw.githubusercontent.com/cheryltky/bikeshare_studies/main/csvdata/Q1.csv", sep=",")
-head(Q1)
-str(Q1)
+```{r q1-biketrips, include=FALSE}
+q1 <- read.csv("https://raw.githubusercontent.com/cheryltky/bikeshare_studies/main/csvdata/Q1.csv", sep=",", header = T)
+head(q1)
+str(q1)
 ```
 
-```{r plot-month-year-bluebikes}
-bluebikes <- ggplot(data= Q1, aes( x= month_year, y=trips_bluebike))+
-  geom_line(color ="orange")
+```{r bluebikes, echo = FALSE, error =FALSE}
+bluebikes <- q1 %>% 
+  tail(10) %>% 
+  ggplot(aes(x= month_year,y=trips_bluebike))+
+geom_point(shape=21, color="orange",size=2)+
+ggtitle("2019 Divvybikes Trip Count")
 
 bluebikes
+
 ```
 
 ##### Q2. Total Trips
@@ -40,11 +41,4 @@ bluebikes
 ##### Q5. Total Trips
 ##### Q6. Total Trips
 ##### Q7. Total Trips
-
-
-
-```{r total trips, echo=FALSE}
-
-```
-
 
