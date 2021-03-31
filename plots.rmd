@@ -25,21 +25,28 @@ str(q1)
 ```
 
 ```{r bluebikes, echo = FALSE, error =FALSE}
+       
 bluebikes <- q1 %>% 
   tail(10) %>% 
   ggplot(aes(x= month_year,y=trips_bluebike))+
-geom_point(shape=21, color="orange",size=2)+
+geom_point(color="orange",size=2)+
 ggtitle("2019 Divvybikes Trip Count")
 
 bluebikes
 
 ```
 
-***
+```{r q1, echo=FALSE, fig.cap="Total Trip Counts"}
+knitr::include_graphics("https://github.com/cheryltky/bikeshare_studies/raw/main/Images/q1.png")
+```
 
-##### Q2. Total Trips
+##### Q2. Subscription Segments
+```{r subscriptions, echo=FALSE}
 
-##### Q3. Total Trips
+
+```
+
+##### Q3. Seasonal Vs Daily Commuter Trends
 ##### Q4. Total Trips
 ##### Q5. Total Trips
 ##### Q6. Total Trips
