@@ -8,17 +8,30 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 ##### Insights into US Bikeshare Companies 
 ```{r packages}
+setwd("D:\\Github\\bikeshare_studies\\csvdata")
+```
+```{r libraries}
+library(readr)
 library(ggplot2)
+library(dplyr)
+library(scales)
 ```
 
 
 ##### Q1. Total Trips
 
-```{r q1, echo=false}
-setwd("D:\\Github\\bikeshare_studies\\csvdata")
-q1 <- read.csv("Q1.csv")
-head(Q1)
+```{r q1-bluebiketrips, echo=false}
 
+q1 <- read.csv("https://raw.githubusercontent.com/cheryltky/bikeshare_studies/main/csvdata/Q1.csv", sep=",")
+head(Q1)
+str(Q1)
+```
+
+```{r plot-month-year-bluebikes}
+bluebikes <- ggplot(data= Q1, aes( x= month_year, y=trips_bluebike))+
+  geom_line(color ="orange")
+
+bluebikes
 ```
 
 ##### Q2. Total Trips
