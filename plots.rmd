@@ -9,34 +9,34 @@ knitr::opts_chunk$set(warning = FALSE)
 ##### Insights into US Bikeshare Companies 
 
 ```{r libraries, include=FALSE}
-library(readr)
 library(ggplot2)
-library(dplyr)
-library(scales)
+library(tidyr)
 ```
 
-
-##### Q1. Total Trips
+##### Q1. 2017-2019 Monthly Trip Counts from Divvybikes and Bluebikes
 
 ```{r q1-biketrips, include=FALSE}
 q1 <- read.csv("https://raw.githubusercontent.com/cheryltky/bikeshare_studies/main/csvdata/Q1.csv", sep=",", header = T)
 head(q1)
 str(q1)
+#add index to dataframe, remove NAs
+q1$index <- seq_len(dim(q1)[1])
+q1 <-na.omit(q1)
+q1
 ```
 
-```{r bluebikes, echo = FALSE, error =FALSE}
-       
-bluebikes <- q1 %>% 
-  tail(10) %>% 
-  ggplot(aes(x= month_year,y=trips_bluebike))+
-geom_point(color="orange",size=2)+
-ggtitle("2019 Divvybikes Trip Count")
 
-bluebikes
+```{r divvy-blue, echo = FALSE}
+
+plot(q1$index, q1$trips_bluebike, pch=20, col="blue", bty='n', xaxt='n', xlab='', ylab="Number of Trips", ylim=c(min(c(q1$trips_bluebike, q1$trips_divvy)), max(c(q1$trips_bluebike, q1$trips_divvy))))
+points(q1$trips_divvy, pch=20, col='red')
+axis(1, at=q1$index, labels=q1$month_year, las=2)
+lines(q1$index, q1$trips_bluebike, col="blue", lwd=1)
+lines(q1$index, q1$trips_divvy, col="red", lwd=1)
 
 ```
 
-```{r q1, echo=FALSE, fig.cap="Total Trip Counts"}
+```{r q1, include=FALSE}
 knitr::include_graphics("https://github.com/cheryltky/bikeshare_studies/raw/main/Images/q1.png")
 ```
 
