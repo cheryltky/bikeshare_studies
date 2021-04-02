@@ -36,15 +36,27 @@ lines(q1$index, q1$trips_divvy, col="red", lwd=1)
 
 ```
 
-```{r q1, include=FALSE}
-knitr::include_graphics("https://github.com/cheryltky/bikeshare_studies/raw/main/Images/q1.png")
+
+
+```{r ggplot method, include=FALSE}
+dat <- read.csv("https://raw.githubusercontent.com/cheryltky/bikeshare_studies/main/csvdata/Q1.csv", sep=",", header = T)
+
+dat$index <- seq_len(dim(dat)[1])
+datl <- gather(dat, company, number_of_trips, trips_bluebike:trips_divvy)
+
+datl
+
+ggplot(datl, aes(x=index, y=number_of_trips, color=as.factor(company))) + geom_point() + scale_x_continuous(breaks=dat$index, labels=dat$month_year) + theme(axis.text.x = element_text(angle=90)) + xlab("Date") + ylab("Number of Trips") + geom_line(data = datl, aes(x=index, y=number_of_trips))
+
+geom_smooth(method="loess")
 ```
 
-##### Q2. Subscription Segments
+##### Q2. Subscription User Counts
 ```{r subscriptions, echo=FALSE}
 
-
 ```
+
+
 
 ##### Q3. Seasonal Vs Daily Commuter Trends
 ##### Q4. Total Trips

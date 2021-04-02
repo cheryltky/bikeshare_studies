@@ -1,4 +1,4 @@
-dat <- read.csv("~/Downloads/Q1.csv", stringsAsFactors=F)
+dat <- read.csv("https://raw.githubusercontent.com/cheryltky/bikeshare_studies/main/csvdata/Q1.csv", sep=",", header = T, stringsAsFactors=F)
 
 library(ggplot2)
 library(tidyr)
