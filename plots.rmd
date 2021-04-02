@@ -13,7 +13,7 @@ library(ggplot2)
 library(tidyr)
 ```
 
-##### Q1. 2017-2019 Monthly Trip Counts from Divvybikes and Bluebikes
+##### Q1. (2017-2019)Trip Counts from Divvybikes and Bluebikes
 
 ```{r q1-biketrips, include=FALSE}
 q1 <- read.csv("https://raw.githubusercontent.com/cheryltky/bikeshare_studies/main/csvdata/Q1.csv", sep=",", header = T)
@@ -51,7 +51,7 @@ ggplot(datl, aes(x=index, y=number_of_trips, color=as.factor(company))) + geom_p
 geom_smooth(method="loess")
 ```
 
-##### Q2. Subscription User Counts
+##### Q2. Subscription Segments
 ```{r subscriptions, echo=FALSE}
 
 ```
