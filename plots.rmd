@@ -1,19 +1,18 @@
 ---
-title: "Graphic Outputs"
+title: "Recommendations for existing bikeshare subscription models"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(warning = FALSE)
 ```
-##### Insights into US Bikeshare Companies 
+##### Aim: Identify areas to improve current subscription model feasibility for Blue Bikes(Boston) and Divvybikes (Chicago) and drive acquisition of new subscribers.
 
 ```{r libraries, include=FALSE}
 library(ggplot2)
 library(tidyr)
 ```
-
-##### Q1. (2017-2019)Trip Counts from Divvybikes and Bluebikes
+##### 1. (2017-2019) Trip Counts from Divvybikes and Bluebikes
 
 ```{r q1-biketrips, include=FALSE}
 q1 <- read.csv("https://raw.githubusercontent.com/cheryltky/bikeshare_studies/main/csvdata/Q1.csv", sep=",", header = T)
@@ -51,7 +50,7 @@ ggplot(datl, aes(x=index, y=number_of_trips, color=as.factor(company))) + geom_p
 geom_smooth(method="loess")
 ```
 
-##### Q2. Subscription Segments
+##### 2. Subscription Segments
 ```{r subscriptions, echo=FALSE}
 
 ```
