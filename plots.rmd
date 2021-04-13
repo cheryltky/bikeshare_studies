@@ -8,7 +8,7 @@ editor_options:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(warning = FALSE)
 ```
-##### Aim: DFetermine current subscription model feasibility for Blue Bikes(Boston) and Divvybikes (Chicago) and drive acquisition of new subscribers.
+##### Aims: Study current subscription model feasibility of Blue Bikes(Boston) and Divvybikes (Chicago) to drive acquisition of new subscribers.
 
 ```{r libraries, include=FALSE}
 library(ggplot2)
@@ -52,8 +52,8 @@ geom_smooth(method="loess")
 str(datl)
 ```
 
-##### 2. Subscription Segments
-```{r subscriptions, echo=FALSE}
+##### 2. Subscription Segment Breakdown
+```{r subscriptions, echo=FALSE, results=FALSE}
 dat2 <- read.csv("https://raw.githubusercontent.com/cheryltky/bikeshare_studies/main/csvdata/q2.csv", fileEncoding="UTF-8-BOM", na.strings = '..',sep = ",", header=T)
 
 dat2 <- na.omit(dat2)
@@ -61,16 +61,20 @@ dat2
 head(dat2)
 str(dat2)
 
+library(scales)
 #barplot
-ggplot(dat2,aes(x= year,y=user_count, fill=as.factor(segment))) + geom_bar(position ="dodge", stat="identity")
+ggplot(dat2,aes(x= year,y=user_count, fill=segment)) + geom_bar(position ="dodge", stat="identity")+
+  scale_y_continuous(
+  labels = scales::comma_format(big.mark = ','))
 
 ```
 
+##### Q3. Seasonal vs Daily Commuter Frequencies
 
+```{r-seasonaltrends}
 
-##### Q3. Seasonal Vs Daily Commuter Trends
-##### Q4. Total Trips
-##### Q5. Total Trips
-##### Q6. Total Trips
-##### Q7. Total Trips
+```
 
+##### Q4. What was the longest journey and what do we know about it?
+##### Q5. How often do bikes need to be relocated?
+##### Q6. How far is a typical journey?
