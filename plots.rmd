@@ -1,6 +1,8 @@
 ---
 title: "Recommendations for existing bikeshare subscription models"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -36,7 +38,6 @@ lines(q1$index, q1$trips_divvy, col="red", lwd=1)
 ```
 
 
-
 ```{r ggplot method, include=FALSE}
 dat <- read.csv("https://raw.githubusercontent.com/cheryltky/bikeshare_studies/main/csvdata/Q1.csv", sep=",", header = T)
 
@@ -48,11 +49,21 @@ datl
 ggplot(datl, aes(x=index, y=number_of_trips, color=as.factor(company))) + geom_point() + scale_x_continuous(breaks=dat$index, labels=dat$month_year) + theme(axis.text.x = element_text(angle=90)) + xlab("Date") + ylab("Number of Trips") + geom_line(data = datl, aes(x=index, y=number_of_trips))
 
 geom_smooth(method="loess")
+str(datl)
 ```
 
 ##### 2. Subscription Segments
 ```{r subscriptions, echo=FALSE}
+dat2 <- read.csv("https://raw.githubusercontent.com/cheryltky/bikeshare_studies/main/csvdata/q2.csv", sep = ",", header=T)
 
+dat2 <- na.omit(dat2)
+head(dat2)
+str(dat2)
+#change year data type to integer
+library(ggplot2)
+#barplot
+ggplot(dat2,aes(x=segment,y=user_count,color=as.factor(year))) +
+  geom_bar(stat="identity")
 ```
 
 
