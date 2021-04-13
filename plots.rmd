@@ -8,7 +8,7 @@ editor_options:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(warning = FALSE)
 ```
-##### Aim: Identify areas to improve current subscription model feasibility for Blue Bikes(Boston) and Divvybikes (Chicago) and drive acquisition of new subscribers.
+##### Aim: DFetermine current subscription model feasibility for Blue Bikes(Boston) and Divvybikes (Chicago) and drive acquisition of new subscribers.
 
 ```{r libraries, include=FALSE}
 library(ggplot2)
@@ -54,16 +54,16 @@ str(datl)
 
 ##### 2. Subscription Segments
 ```{r subscriptions, echo=FALSE}
-dat2 <- read.csv("https://raw.githubusercontent.com/cheryltky/bikeshare_studies/main/csvdata/q2.csv", sep = ",", header=T)
+dat2 <- read.csv("https://raw.githubusercontent.com/cheryltky/bikeshare_studies/main/csvdata/q2.csv", fileEncoding="UTF-8-BOM", na.strings = '..',sep = ",", header=T)
 
 dat2 <- na.omit(dat2)
+dat2
 head(dat2)
 str(dat2)
-#change year data type to integer
-library(ggplot2)
+
 #barplot
-ggplot(dat2,aes(x=segment,y=user_count,color=as.factor(year))) +
-  geom_bar(stat="identity")
+ggplot(dat2,aes(x= year,y=user_count, fill=as.factor(segment))) + geom_bar(position ="dodge", stat="identity")
+
 ```
 
 
