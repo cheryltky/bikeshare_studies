@@ -1,5 +1,5 @@
 ---
-title: "Recommendations for existing bikeshare subscription models"
+title: "US bikeshare subscription modelling"
 output: html_document
 editor_options: 
   chunk_output_type: console
@@ -88,11 +88,12 @@ datlong
 
 #plot seasonality trend
 
-ggplot(datlong, aes(x=index, y=total_users, color=as.factor(company))) + geom_point()+ 
+ggplot(datlong, aes(x=index, y=total_users, color=company)) + geom_point()+ 
   scale_x_continuous(breaks=datlong$index, labels=datlong$month_year) + theme(axis.text.x = element_text(angle=90)) + xlab("Month") + ylab("Number of Users") +
   geom_line(data = datlong, aes(x=index, y=total_users))
 
 ```
+ From the above graph, number of users peak during the summer months of June to August consistently from 2017 to 2019.
 
 ##### 4. What was the longest journey and what do we know about it?
 ```{r longestjourney, echo=FALSE, results=FALSE }
@@ -110,5 +111,10 @@ ggplot(dat4,aes(fill=Company, y= Longest.Journey, x= Year)) +
 
 
 ##### Q5. How often do bikes need to be relocated?
+```{r movecounts, echo=FALSE, results=FALSE}
+dat5 <- read.csv("https://raw.githubusercontent.com/cheryltky/bikeshare_studies/main/csvdata/q5.csv", fileEncoding="UTF-8-BOM", na.strings = '..',sep = ",", header=T)
+str(dat5)
+dat5 <-na.omit(dat5)
+dat5
+```
 
-##### Q6. How far is a typical journey?
