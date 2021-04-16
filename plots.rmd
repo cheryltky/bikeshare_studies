@@ -71,7 +71,7 @@ ggplot(dat2,aes(x= year,y=user_count, fill=segment)) + geom_bar(position ="dodge
 
 ##### Q3. Seasonal vs Daily Commuter Frequencies
 
-```{r-seasonaltrends}
+```{r-seasonaltrends, echo=FALSE}
 
 ```
 
