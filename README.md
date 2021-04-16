@@ -10,10 +10,12 @@
     decisions for potential resource allocations, maximise profits and
     improve customer quality care.
 
--   [Bikeshare Companies Datasets](http://rmarkdown.rstudio.com)
+**Datasets extracted via PostGresQL**
 
--   [Graphs corresponding to the analysis
-    questions](http://rmarkdown.rstudio.com)
+-   [Bluebikes System Dataset](https://s3.amazonaws.com/hubway-data/index.html)
+-   [DivvyBikes Dataset](https://divvy-tripdata.s3.amazonaws.com/index.html)
+
+-   [Visualisations](http://rmarkdown.rstudio.com)
 
 **Analysis Questions with SQL queries:**
 
