@@ -15,8 +15,7 @@
 -   [Bluebikes System Dataset](https://s3.amazonaws.com/hubway-data/index.html)
 -   [DivvyBikes Dataset](https://divvy-tripdata.s3.amazonaws.com/index.html)
 
-**Visualisations to analysis questions** (http://htmlpreview.github.io/?https://raw.githubusercontent.com/cheryltky/bikeshare_studies/main/plots.html)
-
+[**CLICK HERE FOR VISUALISATIONS**](http://htmlpreview.github.io/?https://raw.githubusercontent.com/cheryltky/bikeshare_studies/main/plots.html)
 
 **Analysis Questions with SQL queries:**
 

@@ -16,7 +16,7 @@ knitr::opts_chunk$set(echo = FALSE)
 
 + [Bikeshare Companies Datasets](http://rmarkdown.rstudio.com)
 
-+ [Graphs corresponding to the analysis questions](http://rmarkdown.rstudio.com)
++ [See Visualisations](http://htmlpreview.github.io/?https://raw.githubusercontent.com/cheryltky/bikeshare_studies/main/plots.html)
 
  **Analysis Questions with SQL queries:** 
  
