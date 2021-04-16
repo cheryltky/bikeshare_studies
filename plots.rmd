@@ -42,11 +42,10 @@ lines(q1$index, q1$trips_divvy, col="red", lwd=1)
 dat <- read.csv("https://raw.githubusercontent.com/cheryltky/bikeshare_studies/main/csvdata/Q1.csv", sep=",", header = T)
 
 dat$index <- seq_len(dim(dat)[1])
+
 datl <- gather(dat, company, number_of_trips, trips_bluebike:trips_divvy)
 
-datl
-
-ggplot(datl, aes(x=index, y=number_of_trips, color=as.factor(company))) + geom_point() + scale_x_continuous(breaks=dat$index, labels=dat$month_year) + theme(axis.text.x = element_text(angle=90)) + xlab("Date") + ylab("Number of Trips") + geom_line(data = datl, aes(x=index, y=number_of_trips))
+ggplot(datl, aes(x=index, y=number_of_trips, color=as.factor(company))) + geom_point() + scale_x_discrete(breaks=dat$index, labels=dat$month_year) + theme(axis.text.x = element_text(angle=90)) + xlab("Date") + ylab("Number of Trips") + geom_line(data = datl, aes(x=index, y=number_of_trips))
 
 geom_smooth(method="loess")
 str(datl)
@@ -69,12 +68,47 @@ ggplot(dat2,aes(x= year,y=user_count, fill=segment)) + geom_bar(position ="dodge
 
 ```
 
-##### Q3. Seasonal vs Daily Commuter Frequencies
+##### 3. Seasonal vs Daily Commuter Frequencies
 
-```{r-seasonaltrends, echo=FALSE}
+```{r seasonaltrends, echo=FALSE, results=FALSE}
+dat3_agg<- read.csv("https://raw.githubusercontent.com/cheryltky/bikeshare_studies/main/csvdata/q3_agg.csv", fileEncoding="UTF-8-BOM", na.strings = '..',sep = ",", header=T)
+
+dat3_agg
+str(dat3_agg)
+head(dat3_agg)
+
+#set index so I can draw a line plot for discrete variables
+dat3_agg$index <- seq_len(dim(dat3_agg)[1])
+dat3_agg
+
+#datlong
+datlong <- gather(dat3_agg, company, total_users, divvy_total_users:bluebikes_total_users)
+
+datlong
+
+#plot seasonality trend
+
+ggplot(datlong, aes(x=index, y=total_users, color=as.factor(company))) + geom_point()+ 
+  scale_x_continuous(breaks=datlong$index, labels=datlong$month_year) + theme(axis.text.x = element_text(angle=90)) + xlab("Month") + ylab("Number of Users") +
+  geom_line(data = datlong, aes(x=index, y=total_users))
 
 ```
 
-##### Q4. What was the longest journey and what do we know about it?
+##### 4. What was the longest journey and what do we know about it?
+```{r longestjourney, echo=FALSE, results=FALSE }
+dat4 <- read.csv("https://raw.githubusercontent.com/cheryltky/bikeshare_studies/main/csvdata/q4.csv", fileEncoding="UTF-8-BOM", na.strings = '..',sep = ",", header=T)
+
+str(dat4) 
+
+
+#plot longest journey by year
+
+ggplot(dat4,aes(fill=Company, y= Longest.Journey, x= Year)) +
+  geom_bar(position="dodge", stat="identity")
+
+```
+
+
 ##### Q5. How often do bikes need to be relocated?
+
 ##### Q6. How far is a typical journey?
