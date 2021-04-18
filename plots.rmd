@@ -93,7 +93,7 @@ ggplot(datlong, aes(x=index, y=total_users, color=company)) + geom_point()+
   geom_line(data = datlong, aes(x=index, y=total_users))
 
 ```
- From the above graph, number of users peak during the summer months of June to August consistently from 2017 to 2019.
+ The number of users peak during the summer months of June to August consistently from 2017 to 2019. To drive user acquistion, consider targeting off-peak months with discounted user subscription rates or trialling an additonal subscription tier for off-peak cycling season.
 
 ##### 4. What was the longest journey and what do we know about it?
 ```{r longestjourney, echo=FALSE, results=FALSE }
