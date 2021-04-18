@@ -9,13 +9,13 @@
     decisions for potential resource allocations, maximise profits and
     improve customer quality care.
 
-###### Bikeshare Companies Datasets:
+##### Bikeshare Companies Datasets:
 
 1.[Divvybikes](https://divvy-tripdata.s3.amazonaws.com/index.html)
 
 2.[Bluebikes](https://s3.amazonaws.com/hubway-data/index.html)
 
-# [Visualisations](http://htmlpreview.github.io/?https://raw.githubusercontent.com/cheryltky/bikeshare_studies/main/plots.html)
+### [Visualisations](http://htmlpreview.github.io/?https://raw.githubusercontent.com/cheryltky/bikeshare_studies/main/plots.html)
 
 **SQL Queries:**
 
