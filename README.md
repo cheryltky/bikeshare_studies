@@ -1,21 +1,23 @@
 
-##### Insights into US Bikeshare Companies
+##### US Bikeshare Companies Feasibility Modelling
 
 ###### Aims:
 
 -   Provide data-driven insights into overall trends in customer
     subscription models, seasonal and location demand.
-
 -   Provide bikeshare companies with the ability to make data-driven
     decisions for potential resource allocations, maximise profits and
     improve customer quality care.
 
--   [Bikeshare Companies Datasets](http://rmarkdown.rstudio.com)
+###### Bikeshare Companies Datasets:
 
--   [See
-    Visualisations](http://htmlpreview.github.io/?https://raw.githubusercontent.com/cheryltky/bikeshare_studies/main/plots.html)
+1.[Divvybikes](https://divvy-tripdata.s3.amazonaws.com/index.html)
 
-**Analysis Questions with SQL queries:**
+2.[Bluebikes](https://s3.amazonaws.com/hubway-data/index.html)
+
+# [Visualisations](http://htmlpreview.github.io/?https://raw.githubusercontent.com/cheryltky/bikeshare_studies/main/plots.html)
+
+**SQL Queries:**
 
 ###### 1.*How many trips were there in each month of each year?*
 
