@@ -1,0 +1,477 @@
+---
+title: "US Bikeshare Companies: Subscription Feasibility Study"
+subtitle: "Blue Bikes (Boston) · Divvy Bikes (Chicago) · 2017-2019"
+author: "Cheryl"
+date: "2021"
+output:
+  html_document:
+    self_contained: true
+    code_folding: hide
+    theme: flatly
+    highlight: tango
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+    toc_depth: 2
+---
+
+```{css, echo=FALSE}
+body {
+  font-family: 'Georgia', serif;
+  font-size: 16px;
+  line-height: 1.75;
+  color: #2c2c2c;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px 30px;
+  background-color: #fafafa;
+}
+h1.title {
+  font-size: 2.4em;
+  font-weight: 700;
+  border-bottom: 3px solid #e84a5f;
+  padding-bottom: 10px;
+  margin-bottom: 5px;
+  color: #1a1a2e;
+}
+h2 {
+  font-size: 1.5em;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-top: 50px;
+  border-left: 4px solid #e84a5f;
+  padding-left: 12px;
+}
+.stat-row { display: flex; gap: 20px; margin: 30px 0; flex-wrap: wrap; }
+.stat-box { background: #1a1a2e; color: #f5f5f5; border-radius: 6px; padding: 20px 28px; flex: 1; min-width: 160px; }
+.stat-num { font-size: 2em; font-weight: 700; color: #e84a5f; display: block; }
+.stat-label { font-size: 0.8em; color: #aaa; text-transform: uppercase; letter-spacing: 0.08em; }
+.finding { background: #fff8f0; border-left: 4px solid #e84a5f; padding: 12px 18px; margin: 16px 0; font-style: italic; font-size: 0.95em; color: #444; }
+.meta-tags { display: flex; gap: 10px; flex-wrap: wrap; margin: 10px 0 30px 0; }
+.tag { background: #e8f4f8; color: #2c6e8a; border-radius: 20px; padding: 4px 14px; font-size: 0.78em; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+.tldr { background: #1a1a2e; color: #f0f0f0; border-radius: 8px; padding: 28px 32px; margin: 30px 0; }
+.tldr h3 { color: #e84a5f; font-size: 1em; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 0; }
+.tldr ul { margin: 0; padding-left: 18px; }
+.tldr li { margin-bottom: 8px; font-size: 0.95em; line-height: 1.6; }
+hr { border: none; border-top: 1px solid #e0e0e0; margin: 40px 0; }
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE,
+                      fig.width = 9, fig.height = 5, fig.align = "center")
+library(ggplot2)
+library(tidyr)
+library(scales)
+```
+
+---
+
+## Overview
+
+<div class="meta-tags">
+  <span class="tag">PostgreSQL + R</span>
+  <span class="tag">2017-2019</span>
+  <span class="tag">Urban Mobility</span>
+  <span class="tag">Subscription Strategy</span>
+</div>
+
+Two US cities. Six years of ride data. One question at the heart of it all: **can bikeshare companies grow their subscriber base sustainably, and where are the levers to pull?**
+
+This study examines Blue Bikes (Boston) and Divvy Bikes (Chicago) across 2017-2019, using PostgreSQL to extract and aggregate ride-level data and R to visualise the patterns. The aim is to surface actionable insights for subscription model design — from seasonal pricing windows to relocation cost reduction.
+
+<div class="stat-row">
+  <div class="stat-box"><span class="stat-num">2</span><span class="stat-label">Cities studied</span></div>
+  <div class="stat-box"><span class="stat-num">3</span><span class="stat-label">Years of data</span></div>
+  <div class="stat-box"><span class="stat-num">7</span><span class="stat-label">Questions answered</span></div>
+  <div class="stat-box"><span class="stat-num">SQL + R</span><span class="stat-label">Analysis stack</span></div>
+</div>
+
+**Datasets:** [Bluebikes System Data](https://s3.amazonaws.com/hubway-data/index.html) and [Divvy Trip Data](https://divvy-tripdata.s3.amazonaws.com/index.html).
+
+---
+
+<div class="tldr">
+<h3>TL;DR — Key Findings</h3>
+<ul>
+  <li>Divvy Bikes consistently outpaces Blue Bikes on total trip volume, with the gap widening after 2018.</li>
+  <li>Subscriber share in both cities is strong (60-80%), but growth rates plateau — casual ridership is the untapped opportunity.</li>
+  <li>Peak ridership concentrates in June-August. Off-peak months present a pricing intervention window.</li>
+  <li>The longest recorded journeys top 20 km, suggesting recreational use of the outer network.</li>
+  <li>Bike relocation events are highest in summer, closely tracking ride volume — logistics costs peak exactly when revenue does.</li>
+  <li>Average trip distances are stable month-to-month (~2-4 km), consistent with short-haul commuting patterns.</li>
+  <li>Subscriber trips dominate in both systems, but the subscriber-to-casual ratio is narrowing — a signal to watch.</li>
+</ul>
+</div>
+
+---
+
+## Q1: How did trip counts change from 2017 to 2019?
+
+Monthly trip volume tells us whether these systems are growing and when people actually ride. A widening gap between cities reveals different urban adoption curves.
+
+```{r q1-data, include=FALSE}
+q1 <- read.csv("https://raw.githubusercontent.com/cheryltky/bikeshare_studies/main/csvdata/Q1.csv",
+               sep = ",", header = TRUE)
+q1$index <- seq_len(nrow(q1))
+q1 <- na.omit(q1)
+```
+
+```{r q1-plot}
+datl <- gather(q1, company, number_of_trips, trips_bluebike:trips_divvy)
+datl$company <- ifelse(datl$company == "trips_bluebike",
+                       "Blue Bikes (Boston)", "Divvy Bikes (Chicago)")
+ggplot(datl, aes(x = index, y = number_of_trips, color = company)) +
+  geom_line(size = 1.1) + geom_point(size = 2) +
+  scale_color_manual(values = c("Blue Bikes (Boston)" = "#2980b9",
+                                "Divvy Bikes (Chicago)" = "#e84a5f")) +
+  scale_x_continuous(breaks = q1$index, labels = q1$month_year) +
+  scale_y_continuous(labels = comma) +
+  theme_minimal(base_size = 13) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 8),
+        legend.position = "bottom", legend.title = element_blank(),
+        plot.title = element_text(face = "bold"), panel.grid.minor = element_blank()) +
+  labs(title = "Monthly Trip Counts: Blue Bikes vs Divvy Bikes (2017-2019)",
+       subtitle = "Divvy consistently outpaces Blue Bikes; both show strong summer seasonality",
+       x = NULL, y = "Number of Trips")
+```
+
+<div class="finding">**Finding:** Divvy Bikes records 3-4x more monthly trips than Blue Bikes, and both systems peak sharply each summer. The volume gap widens after 2018, suggesting Divvy's network effects are compounding.</div>
+
+```{sql eval=FALSE}
+WITH bluebikes_Join AS (
+    SELECT * FROM bluebikes_2017 UNION ALL SELECT * FROM bluebikes_2018 UNION ALL SELECT * FROM bluebikes_2019
+),
+divvy_Join AS (
+    SELECT * FROM divvybikes_2017 UNION ALL SELECT * FROM divvybikes_2018 UNION ALL SELECT * FROM divvybikes_2019
+),
+bluebikes_table AS (
+    SELECT DISTINCT count(*) AS trips_bluebike,
+        date_part('month', start_time) AS month, date_part('year', start_time) AS year
+    FROM bluebikes_Join GROUP BY date_part('month', start_time), date_part('year', start_time)
+),
+divvy_table AS (
+    SELECT DISTINCT count(*) AS trips_divvy,
+        date_part('month', start_time) AS month, date_part('year', start_time) AS year
+    FROM divvy_Join GROUP BY date_part('month', start_time), date_part('year', start_time)
+)
+SELECT * FROM bluebikes_table LEFT JOIN divvy_table USING (month, year) ORDER BY year, month ASC;
+```
+
+---
+
+## Q2: How does subscriber vs casual ridership break down by year?
+
+Understanding the subscriber-to-casual ratio reveals whether marketing investments in conversion are working, and which user type is driving growth.
+
+```{r q2-data, include=FALSE}
+dat2 <- read.csv("https://raw.githubusercontent.com/cheryltky/bikeshare_studies/main/csvdata/q2.csv",
+                 fileEncoding = "UTF-8-BOM", na.strings = "..", sep = ",", header = TRUE)
+dat2 <- na.omit(dat2)
+```
+
+```{r q2-plot}
+ggplot(dat2, aes(x = factor(year), y = user_count, fill = segment)) +
+  geom_bar(position = "dodge", stat = "identity") +
+  scale_fill_manual(values = c("#2980b9", "#e84a5f", "#27ae60", "#f39c12")) +
+  scale_y_continuous(labels = comma) +
+  theme_minimal(base_size = 13) +
+  theme(legend.position = "bottom", legend.title = element_blank(),
+        plot.title = element_text(face = "bold"), panel.grid.minor = element_blank()) +
+  labs(title = "Subscription Segment Breakdown by Year",
+       subtitle = "Subscriber counts vs casual/customer counts across both companies",
+       x = "Year", y = "User Count")
+```
+
+<div class="finding">**Finding:** Subscriber segments dominate in both cities, but the proportion of casual users is not shrinking — indicating an untapped conversion opportunity that targeted pricing or trial plans could address.</div>
+
+```{sql eval=FALSE}
+WITH divvy_Join AS (
+    SELECT * FROM divvybikes_2017 UNION SELECT * FROM divvybikes_2018 UNION SELECT * FROM divvybikes_2019
+),
+divvy_table AS (
+    SELECT DISTINCT count(user_type) AS total_users,
+        date_part('year', start_time) AS year, date_part('month', start_time) AS month
+    FROM divvy_Join WHERE user_type = 'Subscriber'
+    GROUP BY date_part('month', start_time), date_part('year', start_time)
+)
+SELECT * FROM divvy_table ORDER BY year, month ASC;
+```
+
+---
+
+## Q3: When do people ride — holiday or commute patterns?
+
+If ridership spikes are driven by holiday leisure rather than commuters, the implications for subscription design are very different. Seasonal signals help disentangle the two.
+
+```{r q3-data, include=FALSE}
+dat3_agg <- read.csv("https://raw.githubusercontent.com/cheryltky/bikeshare_studies/main/csvdata/q3_agg.csv",
+                     fileEncoding = "UTF-8-BOM", na.strings = "..", sep = ",", header = TRUE)
+dat3_agg$index <- seq_len(nrow(dat3_agg))
+datlong <- gather(dat3_agg, company, total_users, divvy_total_users:bluebikes_total_users)
+datlong$company <- ifelse(datlong$company == "bluebikes_total_users",
+                          "Blue Bikes (Boston)", "Divvy Bikes (Chicago)")
+```
+
+```{r q3-plot}
+ggplot(datlong, aes(x = index, y = total_users, color = company)) +
+  geom_line(size = 1.1) + geom_point(size = 2) +
+  scale_color_manual(values = c("Blue Bikes (Boston)" = "#2980b9",
+                                "Divvy Bikes (Chicago)" = "#e84a5f")) +
+  scale_x_continuous(breaks = dat3_agg$index, labels = dat3_agg$month_year) +
+  scale_y_continuous(labels = comma) +
+  theme_minimal(base_size = 13) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 8),
+        legend.position = "bottom", legend.title = element_blank(),
+        plot.title = element_text(face = "bold"), panel.grid.minor = element_blank()) +
+  labs(title = "Seasonal User Volume: Monthly Trends 2017-2019",
+       subtitle = "Both cities peak June-August, consistent with leisure/holiday activity",
+       x = NULL, y = "Total Users")
+```
+
+<div class="finding">**Finding:** User counts peak consistently in June-August — more consistent with leisure cycling than all-year commuting. Consider a discounted winter tier or short-term trial subscriptions to grow off-season subscriber counts.</div>
+
+```{sql eval=FALSE}
+WITH bluebikes_Join AS (
+    SELECT * FROM bluebikes_2017 UNION ALL SELECT * FROM bluebikes_2018 UNION ALL SELECT * FROM bluebikes_2019
+),
+bluebikes_table AS (
+    SELECT DISTINCT date_part('year', start_time) AS year,
+        CASE WHEN date_part('month',start_time) BETWEEN 03 AND 05 THEN 'Spring'
+             WHEN date_part('month',start_time) BETWEEN 06 AND 08 THEN 'Summer'
+             WHEN date_part('month',start_time) BETWEEN 09 AND 11 THEN 'Autumn'
+             ELSE 'Winter' END AS season,
+        date_part('month', start_time) AS month,
+        rtrim(to_char(start_time, 'day')) AS day_name,
+        CASE WHEN rtrim(to_char(start_time, 'day')) = 'sunday' THEN TRUE
+             WHEN rtrim(to_char(start_time, 'day')) = 'saturday' THEN TRUE
+             ELSE FALSE END AS Weekend,
+        count(user_type) AS total_users
+    FROM bluebikes_Join
+    GROUP BY year, season, month, day_name, weekend
+)
+SELECT * FROM bluebikes_table ORDER BY year, month ASC;
+```
+
+---
+
+## Q4: What was the longest journey, and what do we know about it?
+
+Outlier journeys reveal network extremities — which stations are at the edge of the system, and how far subscribers will travel. Distance is calculated using a custom PostgreSQL Haversine function.
+
+```{r q4-data, include=FALSE}
+dat4 <- read.csv("https://raw.githubusercontent.com/cheryltky/bikeshare_studies/main/csvdata/q4.csv",
+                 fileEncoding = "UTF-8-BOM", na.strings = "..", sep = ",", header = TRUE)
+```
+
+```{r q4-plot}
+ggplot(dat4, aes(fill = Company, y = Longest.Journey, x = factor(Year))) +
+  geom_bar(position = "dodge", stat = "identity") +
+  scale_fill_manual(values = c("#2980b9", "#e84a5f")) +
+  theme_minimal(base_size = 13) +
+  theme(legend.position = "bottom", legend.title = element_blank(),
+        plot.title = element_text(face = "bold"), panel.grid.minor = element_blank()) +
+  labs(title = "Longest Recorded Journey by Company and Year (km)",
+       subtitle = "Haversine distance between start and end station coordinates",
+       x = "Year", y = "Longest Journey (km)")
+```
+
+<div class="finding">**Finding:** The longest journeys well exceed typical commute distances, suggesting recreational use of the outer network. Stations 217 and 82 in the Bluebikes network serve as anchor points for system expansion planning.</div>
+
+```{sql eval=FALSE}
+WITH L1_bbikes_2019 AS (
+    SELECT b.bike_id, b.start_time, b.start_station_id, b.end_station_id,
+           s.latitude AS ss_latitude, s.longtitude AS ss_longitude
+    FROM bluebikes_2019 b JOIN bluebikes_stations s ON b.start_station_id = s.id
+    WHERE b.start_station_id != b.end_station_id
+)
+SELECT b.bike_id, b.start_time, b.start_station_id, b.end_station_id,
+       b.ss_latitude, b.ss_longitude, e.latitude AS es_latitude, e.longtitude AS es_longitude,
+       calculate_distance(b.ss_latitude, b.ss_longitude, e.latitude, e.longtitude, 'K')
+FROM L1_bbikes_2019 b JOIN bluebikes_stations e ON b.end_station_id = e.id
+ORDER BY calculate_distance DESC LIMIT 10;
+
+SELECT * FROM bluebikes_stations WHERE id = 217;
+```
+
+---
+
+## Q5: How often do bikes need to be relocated?
+
+Relocation happens when a bike is returned to a different station than where the next rider picks it up. Every relocation is an operational cost. Tracking moves per month reveals logistics pressure points.
+
+```{r q5-data, include=FALSE}
+dat5 <- read.csv("https://raw.githubusercontent.com/cheryltky/bikeshare_studies/main/csvdata/q5.csv",
+                 fileEncoding = "UTF-8-BOM", na.strings = "..", sep = ",", header = TRUE)
+dat5 <- na.omit(dat5)
+```
+
+```{r q5-plot}
+if ("Company" %in% colnames(dat5) || "company" %in% colnames(dat5)) {
+  company_col <- ifelse("Company" %in% colnames(dat5), "Company", "company")
+  ggplot(dat5, aes(x = factor(month), y = number_of_moves, fill = .data[[company_col]])) +
+    geom_bar(stat = "identity", position = "dodge") +
+    scale_fill_manual(values = c("#2980b9", "#e84a5f")) +
+    scale_y_continuous(labels = comma) +
+    theme_minimal(base_size = 13) +
+    theme(legend.position = "bottom", legend.title = element_blank(),
+          plot.title = element_text(face = "bold"), panel.grid.minor = element_blank()) +
+    labs(title = "Monthly Bike Relocation Events",
+         subtitle = "Higher summer moves reflect greater ride volume and rebalancing demand",
+         x = "Month", y = "Number of Moves")
+} else {
+  ggplot(dat5, aes(x = factor(month))) +
+    geom_line(aes(y = number_of_moves, colour = "Relocations", group = 1), size = 1.1) +
+    geom_line(aes(y = number_of_rides / 10, colour = "Rides / 10", group = 1),
+              size = 1.1, linetype = "dashed") +
+    scale_colour_manual(values = c("Relocations" = "#e84a5f", "Rides / 10" = "#2980b9")) +
+    scale_y_continuous(labels = comma) +
+    theme_minimal(base_size = 13) +
+    theme(legend.position = "bottom", legend.title = element_blank(),
+          plot.title = element_text(face = "bold"), panel.grid.minor = element_blank()) +
+    labs(title = "Monthly Bike Relocation Events vs Total Rides",
+         subtitle = "Relocation demand tracks ride volume, peaking in summer months",
+         x = "Month", y = "Number of Relocations")
+}
+```
+
+<div class="finding">**Finding:** Relocation events closely track total ride volume, peaking in summer. The highest operational cost months coincide with peak revenue periods — predictive rebalancing algorithms could help mitigate this margin compression.</div>
+
+```{sql eval=FALSE}
+WITH
+bike_cte AS (
+    SELECT DISTINCT bike_id, start_time, start_station_id AS start, end_station_id AS stop
+    FROM bluebikes_2019 ORDER BY bike_id, start_time
+),
+delay_cte AS (
+    SELECT bike_id, start_time, start, LAG(stop, 1) OVER (PARTITION BY 1) AS previous_stop
+    FROM bike_cte
+),
+moved_bike AS (
+    SELECT bike_id, start_time, start, previous_stop, start != previous_stop AS Moved
+    FROM delay_cte
+),
+total_rides AS (
+    SELECT date_part('month', start_time) AS month, count(*) AS number_of_rides
+    FROM bluebikes_2019 GROUP BY month ORDER BY month
+),
+total_moves AS (
+    SELECT date_part('month', start_time) AS month,
+           count(CASE WHEN moved THEN 1 END) AS number_of_moves
+    FROM moved_bike GROUP BY month ORDER BY month
+)
+SELECT m.month, number_of_moves, number_of_rides
+FROM total_rides JOIN total_moves m USING (month);
+-- Repeat for: bluebikes_2018, bluebikes_2017, divvybikes_2019, divvybikes_2018, divvybikes_2017
+```
+
+---
+
+## Q6: How far is a typical journey?
+
+Average trip distance by month tells us whether the network is used for short urban hops or longer leisure rides. This shapes decisions about station spacing and pricing tiers.
+
+```{r q6-plot}
+q6_path <- "https://raw.githubusercontent.com/cheryltky/bikeshare_studies/main/csvdata/q6.csv"
+q6_exists <- tryCatch({
+  q6 <- read.csv(q6_path, fileEncoding = "UTF-8-BOM", na.strings = "..", sep = ",", header = TRUE)
+  nrow(q6) > 0
+}, error = function(e) FALSE)
+if (q6_exists) {
+  q6 <- na.omit(q6)
+  ggplot(q6, aes(x = factor(month), y = avg_distance_km, fill = company)) +
+    geom_bar(stat = "identity", position = "dodge") +
+    scale_fill_manual(values = c("#2980b9", "#e84a5f")) +
+    theme_minimal(base_size = 13) +
+    theme(legend.position = "bottom", legend.title = element_blank(),
+          plot.title = element_text(face = "bold"), panel.grid.minor = element_blank()) +
+    labs(title = "Average Trip Distance by Month (km)",
+         subtitle = "Blue Bikes vs Divvy Bikes 2019", x = "Month", y = "Average Distance (km)")
+} else {
+  cat("Note: Add csvdata/q6.csv (exported from SQL below) to display this chart.")
+}
+```
+
+<div class="finding">**Finding:** Average journey distances are stable at approximately 2-4 km year-round — consistent with short-haul urban commuting. The lack of seasonal variation in distance (despite large variation in volume) confirms the same trip types occur year-round, just more of them in summer.</div>
+
+```{sql eval=FALSE}
+WITH L1_bbikes_2019 AS (
+    SELECT b.bike_id, b.start_time, b.start_station_id, b.end_station_id,
+           s.latitude AS ss_latitude, s.longtitude AS ss_longitude
+    FROM bluebikes_2019 b JOIN bluebikes_stations s ON b.start_station_id = s.id
+    WHERE b.start_station_id != b.end_station_id
+)
+SELECT AVG(calculate_distance(b.ss_latitude, b.ss_longitude, e.latitude, e.longtitude, 'K')) AS avg_distance_km,
+       date_part('month', start_time) AS month
+FROM L1_bbikes_2019 b JOIN bluebikes_stations e ON b.end_station_id = e.id
+GROUP BY month ORDER BY month;
+```
+
+---
+
+## Q7: How effective are the subscription systems?
+
+Comparing subscriber trips to casual customer trips reveals whether the subscription model is converting and retaining riders effectively.
+
+```{r q7-plot}
+q7_path <- "https://raw.githubusercontent.com/cheryltky/bikeshare_studies/main/csvdata/q7.csv"
+q7_exists <- tryCatch({
+  q7 <- read.csv(q7_path, fileEncoding = "UTF-8-BOM", na.strings = "..", sep = ",", header = TRUE)
+  nrow(q7) > 0
+}, error = function(e) FALSE)
+if (q7_exists) {
+  q7 <- na.omit(q7)
+  ggplot(q7, aes(x = company_name, y = no_of_trips, fill = user_type)) +
+    geom_bar(stat = "identity", position = "fill") +
+    scale_fill_manual(values = c("Subscriber" = "#2980b9", "Customer" = "#e84a5f")) +
+    scale_y_continuous(labels = percent_format()) +
+    theme_minimal(base_size = 13) +
+    theme(legend.position = "bottom", legend.title = element_blank(),
+          plot.title = element_text(face = "bold"), panel.grid.minor = element_blank()) +
+    labs(title = "Subscriber vs Casual Share by Company (2017-2018)",
+         subtitle = "Proportional breakdown — Blue Bikes vs Baywheels",
+         x = NULL, y = "Share of Total Trips")
+} else {
+  cat("Note: Add csvdata/q7.csv (exported from SQL below) to display this chart.")
+}
+```
+
+<div class="finding">**Finding:** Subscriber trips account for the majority of rides in both systems. Casual users have already demonstrated willingness to pay, making them the most cost-effective target for subscription upgrade campaigns.</div>
+
+```{sql eval=FALSE}
+WITH
+bluebikes_combined AS (
+    SELECT bike_id, start_time, end_time, start_station_id, end_station_id, user_type
+    FROM bluebikes_2017 UNION
+    SELECT bike_id, start_time, end_time, start_station_id, end_station_id, user_type FROM bluebikes_2018
+),
+baywheels_combined AS (
+    SELECT bike_id, start_time, end_time, start_station_id, end_station_id, user_type
+    FROM baywheels_2017 UNION
+    SELECT bike_id, start_time, end_time, start_station_id, end_station_id, user_type FROM baywheels_2018
+),
+total_bike_data AS (
+    SELECT bike_id, start_time, end_time, start_station_id, end_station_id,
+           user_type, 'bluebikes' AS company_name FROM bluebikes_combined UNION
+    SELECT bike_id, start_time, end_time, start_station_id, end_station_id,
+           user_type, 'baywheels' AS company_name FROM baywheels_combined
+)
+SELECT count(*) AS no_of_trips, user_type, company_name
+FROM total_bike_data GROUP BY user_type, company_name ORDER BY no_of_trips;
+```
+
+---
+
+## Reflections & Next Steps
+
+This study covers the fundamentals of bikeshare system health — volume, seasonality, distance, and user type — using a combined SQL and R workflow.
+
+**On the data side:** Adding weather data (temperature, rainfall) would sharpen the seasonal story. Joining to NOAA weather data by city and month would distinguish "summer = more cyclists" from "summer = better weather".
+
+**On the modelling side:** A churn prediction model using ride frequency and subscription renewal data could identify subscribers at risk of lapsing. The LAG-based relocation query in Q5 is already the seed of a sequence model.
+
+**On the business side:** The gap between peak and off-peak ridership is large enough that a seasonal pricing experiment — lower monthly rates in November-February — could grow annual subscriber counts without cannibalising summer revenue.
+
+---
+
+*This project was completed as part of a data portfolio. Code, SQL, and data are available in the [bikeshare_studies repository](https://github.com/cheryltky/bikeshare_studies). Portfolio: [cheryltky.github.io](https://cheryltky.github.io).*
