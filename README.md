@@ -1,561 +1,116 @@
+# How can bikeshare operators grow their subscriber base?
 
-##### US Bikeshare Companies Feasibility Modelling
+![Total trips per month, Bluebikes and Divvy, 2017 to 2019](assets/monthly-trips.png)
 
-###### Aims:
+## Project background
 
--   Provide data-driven insights into overall trends in customer
-    subscription models, seasonal and location demand.
--   Provide bikeshare companies with the ability to make data-driven
-    decisions for potential resource allocations, maximise profits and
-    improve customer quality care.
+Bluebikes (Boston) and Divvy (Chicago) are US bikeshare systems. Both sell
+subscriptions and also serve casual riders who pay per trip. The decision this
+analysis supports is how an operator should price, promote and resource its
+service to acquire more subscribers and keep running costs under control.
 
-##### Bikeshare Companies Datasets:
+I wrote the queries in SQL (PostgreSQL) and charted the results in R, working
+from the operators' public trip data for 2017 to 2019. Seven business
+questions are answered across three areas:
 
-1.[Divvybikes](https://divvy-tripdata.s3.amazonaws.com/index.html)
+- **Demand and seasonality:** monthly trip volume, and whether riding is driven by holidays or commuting
+- **Subscriptions:** the split between subscribers and casual riders, and how effective the subscription model is
+- **Network and operations:** the longest and typical journey, and how often bikes must be relocated
 
-2.[Bluebikes](https://s3.amazonaws.com/hubway-data/index.html)
+Links to the technical work:
 
-### [Visualisations](https://htmlpreview.github.io/?https://raw.githubusercontent.com/cheryltky/bikeshare_studies/main/plots.html)
+- Queries and results for all seven questions: [docs/METHODOLOGY.md](docs/METHODOLOGY.md)
+- Charts for questions 1 to 5: [plots.rmd](plots.rmd), rendered at
+  [Visualisations](https://htmlpreview.github.io/?https://raw.githubusercontent.com/cheryltky/bikeshare_studies/main/plots.html)
+- Narrative report with SQL, charts and findings: [bikeshare_story.rmd](bikeshare_story.rmd)
+- Question 1 chart script: [scripts/q1plots.R](scripts/q1plots.R)
+- Exported results: [csvdata/](csvdata/)
 
-**SQL Queries:**
+## Data structure and initial checks
 
-###### 1.*How many trips were there in each month of each year?*
+The data is one table of trips per company per year (Divvy and Bluebikes for
+2017, 2018 and 2019), plus a station table per company with coordinates. Each
+row is one trip with a start time, start and end station and a user type
+(`Subscriber` or casual). Question 7 also uses Baywheels trips for 2017 and
+2018. Per-year trip counts are also queried to express subscribers as a share of
+all trips (question 2 in the methodology). No other validation checks or row
+counts are recorded in the repository.
 
-``` sql
-with bluebikes_Join as (    select * from bluebikes_2017
-                    UNION ALL
-                    select * from bluebikes_2018
-                    UNION ALL
-                    select * from bluebikes_2019),
-divvy_Join as (     select * from divvybikes_2017
-                    UNION ALL
-                    select * from divvybikes_2018
-                    UNION ALL
-                    select * from divvybikes_2019),
-bluebikes_table as (select  distinct count(*) as trips_bluebike, date_part('month', start_time) as month,date_part('year', start_time) as year from bluebikes_Join
-    group by date_part('month', start_time),date_part('year', start_time)),
-    divvy_table as (select distinct count(*) as trips_divvy, date_part('month', start_time) as month,date_part('year', start_time) as year from divvy_Join
-group by date_part('month', start_time),date_part('year', start_time))
-    select * from bluebikes_table 
-    left join divvy_table using(month,year)
-    order by year,month asc
-```
+## Executive summary
 
-------------------------------------------------------------------------
+Divvy averaged **3.7 times Bluebikes' monthly trips in 2017, narrowing to 1.5
+times in 2019** as Bluebikes grew faster, and both systems peak in June to August in each of the three years. Subscribers make
+up the majority of trips, but the share of casual riders is not shrinking, so
+casual riders are the clearest source of new subscribers. Relocation of bikes
+follows ride volume, which means operating cost peaks when demand does.
 
-###### 2.Which stations are showing the greatest growth rates?
+![Total trips per month, Bluebikes and Divvy](assets/monthly-trips.png)
 
-``` sql
-with bluebikes_Join as (    select * from bluebikes_2017
-                    UNION ALL
-                    select * from bluebikes_2018
-                    UNION ALL
-                    select * from bluebikes_2019),
-divvy_Join as (     select * from divvybikes_2017
-                    UNION ALL
-                    select * from divvybikes_2018
-                    UNION ALL
-                    select * from divvybikes_2019),
-bluebikes_table as (select  distinct count(*) as trips_bluebike, date_part('month', start_time) as month,date_part('year', start_time) as year from bluebikes_Join
-    group by date_part('month', start_time),date_part('year', start_time)),
-    divvy_table as (select distinct count(*) as trips_divvy, date_part('month', start_time) as month,date_part('year', start_time) as year from divvy_Join
-group by date_part('month', start_time),date_part('year', start_time))
-    select * from bluebikes_table 
-    left join divvy_table using(month,year)
-    order by year,month asc
-    select * from bluebikes_table
-    order by year,month asc
-```
+## Insights deep dive
 
-``` sql
-Divvy Bikes Month on Month Data breakdown of subscribers (absolute figures)
+### Demand and seasonality
 
-with divvy_Join as (    select * from divvybikes_2017
-                    UNION
-                    select * from divvybikes_2018
-                    UNION
-                    select * from divvybikes_2019),
-divvy_table as (select distinct count(user_type) as total_users, date_part('year', start_time) as year,date_part('month', start_time) as month from divvy_Join
-    where user_type = 'Subscriber'
-    group by date_part('month', start_time),date_part('year', start_time))
-    select * from divvy_table
-    order by year,month asc
-```
+- **Divvy's lead shrank from 3.7 times Bluebikes' monthly trips in 2017 to 2.1 in 2018 and 1.5 in 2019.**
+  Both systems rise and fall with the seasons across the 36 months from January
+  2017 to December 2019 (question 1).
+- **User counts peak in June to August in every year from 2017 to 2019.** That
+  pattern is more consistent with leisure riding than year-round commuting
+  (question 3).
 
-``` sql
-Divvy Bikes Data count (used for expression as proportion of total subscriber share)
+### Subscriptions
 
-select distinct count(user_type)
-from divvybikes_2019
-UNION ALL   
-select distinct count(user_type)
-from divvybikes_2018    
-UNION ALL
-select distinct count(user_type)
-from divvybikes_2017
-Blue Bikes Data count (used for expression as proportion of total subscriber share)
+- **Subscribers are 77 to 84% of users in both cities every year.** The
+  Bluebikes subscriber share slipped from 84% in 2017 to 79% in 2019
+  (question 2).
+- **The casual share is not shrinking.** Casual riders have already shown they
+  will pay per trip, which makes them the lowest-cost target for subscription
+  upgrades (questions 2 and 7).
 
-select distinct count(user_type)
-from bluebikes_2019
-UNION ALL   
-select distinct count(user_type)
-from bluebikes_2018 
-UNION ALL
-select distinct count(user_type)
-from bluebikes_2017
-```
+### Network and operations
 
-------------------------------------------------------------------------
+- **Divvy's longest journeys reach 27 to 37 km a year, against 11 to 16 km for
+  Bluebikes.** This points to recreational
+  use of the outer network. Bluebikes stations 217 and 82 were looked up as part
+  of the longest-journey query (question 4).
+- **Relocation events track ride volume and peak in summer.** The months that
+  cost most to rebalance are the months with most revenue (question 5).
+- **Average trips are short, about 1.35 to 2.45 km by season, and stable year to year.**
+  The same kinds of trip happen all year, just more of them in summer
+  (question 6).
 
-###### 3. Is there a difference in growth between holiday activity and commuting activity?
+## Recommendations
 
-``` sql
-Divvybikes Data
+For the operator's pricing, marketing and operations teams:
 
-with divvy_Join as (    select * from divvybikes_2017
-                    UNION
-                    select * from divvybikes_2018
-                    UNION
-                    select * from divvybikes_2019),
-divvy_table as (select distinct count(user_type) as total_users, date_part('year', start_time) as year,date_part('month', start_time) as month from divvy_Join
-    where user_type = 'Subscriber'
-    group by date_part('month', start_time),date_part('year', start_time))
-    select * from divvy_table
-    order by year,month asc
-```
+- Peak ridership is concentrated in June to August. **Offer discounted
+  subscription rates or a trial tier for the off-peak months to grow
+  subscribers outside summer.**
+- The casual share is not falling. **Target casual riders with upgrade
+  campaigns, as they have already shown willingness to pay.**
+- Relocation peaks with ride volume. **Introduce predictive rebalancing to
+  reduce logistics cost in the summer months.**
+- Recorded next steps: **join weather data by city and month to separate
+  "summer means more riders" from "summer means better weather", and test a
+  November to February price cut.**
 
-``` sql
-Bluebikes data
+## Assumptions and caveats
 
-WITH bluebikes_Join as 
-(SELECT * FROM bluebikes_2017
-UNION ALL
-SELECT * FROM bluebikes_2018
-UNION ALL
-SELECT * FROM bluebikes_2019),
-bluebikes_table as 
-(SELECT DISTINCT
-date_part('year', start_time) as year,
-CASE
-WHEN date_part('month',start_time) BETWEEN 03 AND 05 THEN 'Spring'
-WHEN date_part('month',start_time) BETWEEN 06 AND 08 THEN 'Summer'
-WHEN date_part('month',start_time) BETWEEN 09 AND 11 THEN 'Autumn'
-ELSE 'Winter'
-END AS season,
-date_part('month', start_time) as month,
-date_part('day',start_time) as day,
-rtrim(to_char(start_time, 'day')) AS day_name,
-CASE
- WHEN rtrim(to_char(start_time, 'day')) = 'sunday' THEN TRUE
- WHEN rtrim(to_char(start_time, 'day')) = 'saturday' THEN TRUE
- ELSE FALSE 
-END AS Weekend,
-count(user_type) as total_users
-FROM bluebikes_Join
-/* WHERE user_type = 'Subscriber'  */
-GROUP BY year,season,month,day,day_name,weekend)
-SELECT * 
-FROM bluebikes_table
-ORDER BY year,month,day ASC
-```
+- Ratios, shares and distances above are calculated from the exported query
+  results in [csvdata/](csvdata/). They differ from the earlier summary in
+  [bikeshare_story.rmd](bikeshare_story.rmd), which predates the full three
+  years of data. Distances are straight-line between stations, not route length.
+- Question 7 has no exported result file in `csvdata/`, so its chart is not
+  reproducible from the repository as it stands.
+- Distance is the straight-line distance between start and end stations, not
+  the distance ridden, and trips that start and end at the same station are
+  excluded from the distance queries.
+- A bike is counted as relocated when its next start station differs from the
+  previous end station. The query orders trips by bike and start time.
+- The study covers two cities and three years, so it describes these two
+  systems and not the US market.
 
-------------------------------------------------------------------------
+## Technical detail
 
-###### 4. What was the longest journey? What do we know about it?
-
-``` sql
-WITH
-L1_bbikes_2019 AS 
-(SELECT 
-b.bike_id,
-b.start_time,
-b.start_station_id,
-b.end_station_id,
-s.latitude as ss_latitude,
-s.longtitude as ss_longitude
-FROM bluebikes_2019 b
-JOIN bluebikes_stations s ON b.start_station_id = s.id
-WHERE b.start_station_id != b.end_station_id AND (date_part('month',start_time) BETWEEN 01 AND 12))
-SELECT 
-b.bike_id,
-b.start_time,
-b.start_station_id,
-b.end_station_id,
-b.ss_latitude,          /* Start stations info */
-b.ss_longitude,
-e.latitude as es_latitude,    /* End stations info */
-e.longtitude as es_longitude,
-calculate_distance(b.ss_latitude, b.ss_longitude, 
-                          e.latitude, e.longtitude, 
-                          'K')
-FROM L1_bbikes_2019 b
-JOIN bluebikes_stations e ON b.end_station_id = e.id
-ORDER BY calculate_distance DESC
-LIMIT 10
-```
-
-##### *longest journey*
-
-``` sql
-select *
-FROM bluebikes_stations
-where id = 217
---or where id =82
-```
-
-``` sql
-Divvy Bikes 
-WITH
-L1_divvybikes_2019 AS
-(SELECT
-b.bikeid,
-b.start_time,
-b.start_station_id,
-b.end_station_id,
-s.latitude as ss_latitude,
-s.longitude as ss_longitude
-FROM divvybikes_2019 b
-JOIN divvy_stations s ON b.start_station_id = s.id
-WHERE b.start_station_id != b.end_station_id AND (date_part('month',start_time) BETWEEN 01 AND 12))
-SELECT
-b.bikeid,
-b.start_time,
-b.start_station_id,
-b.end_station_id,
-b.ss_latitude,          /* Start stations info */
-b.ss_longitude,
-e.latitude as es_latitude,    /* End stations info */
-e.longitude as es_longitude,
-calculate_distance(b.ss_latitude, b.ss_longitude,
-                          e.latitude, e.longitude,
-                          'K')
-FROM L1_divvybikes_2019 b
-JOIN divvy_stations e ON b.end_station_id = e.id
-ORDER BY calculate_distance DESC
-LIMIT 10
-
-
-
-WITH
-L1_divvybikes_2019 AS
-(SELECT
-b.bikeid,
-b.start_time,
-b.start_station_id,
-b.end_station_id,
-s.latitude as ss_latitude,
-s.longitude as ss_longitude
-FROM divvybikes_2019 b
-JOIN divvy_stations s ON b.start_station_id = s.id
-WHERE b.start_station_id != b.end_station_id AND (date_part('month',start_time) BETWEEN 01 AND 12))
-SELECT
-b.bikeid,
-b.start_time,
-b.start_station_id,
-b.end_station_id,
-b.ss_latitude,          /* Start stations info */
-b.ss_longitude,
-e.latitude as es_latitude,    /* End stations info */
-e.longitude as es_longitude,
-calculate_distance(b.ss_latitude, b.ss_longitude,
-                          e.latitude, e.longitude,
-                          'K')
-FROM L1_divvybikes_2019 b
-JOIN divvy_stations e ON b.end_station_id = e.id
-ORDER BY calculate_distance DESC
-LIMIT 10
-```
-
-------------------------------------------------------------------------
-
-###### 5. *How often do bikes need to be relocated?*
-
-``` sql
-2019 Bluebike
-
-WITH
-bike_cte AS                  /* Grab the rides in order */
-(SELECT Distinct bike_id, start_time, start_station_id as start, end_station_id as stop
-FROM bluebikes_2019
-ORDER BY bike_id,start_time),
-delay_cte AS         /* Grab the start position and the previous end position */
-(SELECT bike_id, start_time, start, LAG(stop, 1) OVER( Partition BY 1) as previous_stop
-FROM bike_cte),
-moved_bike AS     /* Was the bike moved or not */
-(SELECT bike_id, start_time, start, previous_stop, start!=previous_stop AS Moved
-FROM delay_cte),
-total_rides AS      /* Count all the rides */
-(SELECT date_part('month',start_time) AS month, count(*) AS number_of_rides
-FROM bluebikes_2019
-GROUP BY month
-ORDER BY month),
-total_moves AS     /* Count all the moves */
-(SELECT date_part('month',start_time) AS month, count(CASE WHEN moved THEN 1 END) AS number_of_moves
-FROM moved_bike
-GROUP BY month
-ORDER BY month)
--- Grab the monthly moves and total rides
-SELECT 
-m.month,
-number_of_moves,
-number_of_rides
-FROM total_rides
-JOIN total_moves m USING(month)
-'''
-'''sql
-2018 Bluebike
-WITH
-bike_cte AS                  /* Grab the rides in order */
-(SELECT Distinct bike_id, start_time, start_station_id as start, end_station_id as stop
-FROM bluebikes_2018
-ORDER BY bike_id,start_time),
-delay_cte AS         /* Grab the start position and the previous end position */
-(SELECT bike_id, start_time, start, LAG(stop, 1) OVER( Partition BY 1) as previous_stop
-FROM bike_cte),
-moved_bike AS     /* Was the bike moved or not */
-(SELECT bike_id, start_time, start, previous_stop, start!=previous_stop AS Moved
-FROM delay_cte),
-total_rides AS      /* Count all the rides */
-(SELECT date_part('month',start_time) AS month, count(*) AS number_of_rides
-FROM bluebikes_2018
-GROUP BY month
-ORDER BY month),
-total_moves AS     /* Count all the moves */
-(SELECT date_part('month',start_time) AS month, count(CASE WHEN moved THEN 1 END) AS number_of_moves
-FROM moved_bike
-GROUP BY month
-ORDER BY month)
--- Grab the monthly moves and total rides
-SELECT 
-m.month,
-number_of_moves,
-number_of_rides
-FROM total_rides
-JOIN total_moves m USING(month)
-```
-
-``` sql
-2017 Bluebike
-
-
-WITH
-bike_cte AS                  /* Grab the rides in order */
-(SELECT Distinct bike_id, start_time, start_station_id as start, end_station_id as stop
-FROM bluebikes_2017
-ORDER BY bike_id,start_time),
-delay_cte AS         /* Grab the start position and the previous end position */
-(SELECT bike_id, start_time, start, LAG(stop, 1) OVER( Partition BY 1) as previous_stop
-FROM bike_cte),
-moved_bike AS     /* Was the bike moved or not */
-(SELECT bike_id, start_time, start, previous_stop, start!=previous_stop AS Moved
-FROM delay_cte),
-total_rides AS      /* Count all the rides */
-(SELECT date_part('month',start_time) AS month, count(*) AS number_of_rides
-FROM bluebikes_2017
-GROUP BY month
-ORDER BY month),
-total_moves AS     /* Count all the moves */
-(SELECT date_part('month',start_time) AS month, count(CASE WHEN moved THEN 1 END) AS number_of_moves
-FROM moved_bike
-GROUP BY month
-ORDER BY month)
--- Grab the monthly moves and total rides
-SELECT 
-m.month,
-number_of_moves,
-number_of_rides
-FROM total_rides
-JOIN total_moves m USING(month)
-```
-
-``` sql
-Divvybikes 2019
-
-WITH
-bike_cte AS                  /* Grab the rides in order */
-(SELECT Distinct bikeid, start_time, start_station_id as start, end_station_id as stop
-FROM divvybikes_2019
-ORDER BY bikeid,start_time),
-delay_cte AS         /* Grab the start position and the previous end position */
-(SELECT bikeid, start_time, start, LAG(stop, 1) OVER( Partition BY 1) as previous_stop
-FROM bike_cte),
-moved_bike AS     /* Was the bike moved or not */
-(SELECT bikeid, start_time, start, previous_stop, start!=previous_stop AS Moved
-FROM delay_cte),
-total_rides AS      /* Count all the rides */
-(SELECT date_part('month',start_time) AS month, count(*) AS number_of_rides
-FROM divvybikes_2019
-GROUP BY month
-ORDER BY month),
-total_moves AS     /* Count all the moves */
-(SELECT date_part('month',start_time) AS month, count(CASE WHEN moved THEN 1 END) AS number_of_moves
-FROM moved_bike
-GROUP BY month
-ORDER BY month)
---monthly moves and total rides
-SELECT 
-m.month,
-number_of_moves,
-number_of_rides
-FROM total_rides
-JOIN total_moves m USING(month)
-```
-
-``` sql
-Divvybikes 2018
-
-WITH
-bike_cte AS                  /* Grab the rides in order */
-(SELECT Distinct bikeid, start_time, start_station_id as start, end_station_id as stop
-FROM divvybikes_2018
-ORDER BY bikeid,start_time),
-delay_cte AS         /* Grab the start position and the previous end position */
-(SELECT bikeid, start_time, start, LAG(stop, 1) OVER( Partition BY 1) as previous_stop
-FROM bike_cte),
-moved_bike AS     /* Was the bike moved or not */
-(SELECT bikeid, start_time, start, previous_stop, start!=previous_stop AS Moved
-FROM delay_cte),
-total_rides AS      /* Count all the rides */
-(SELECT date_part('month',start_time) AS month, count(*) AS number_of_rides
-FROM divvybikes_2018
-GROUP BY month
-ORDER BY month),
-total_moves AS     /* Count all the moves */
-(SELECT date_part('month',start_time) AS month, count(CASE WHEN moved THEN 1 END) AS number_of_moves
-FROM moved_bike
-GROUP BY month
-ORDER BY month)
--- Grab the monthly moves and total rides
-SELECT 
-m.month,
-number_of_moves,
-number_of_rides
-FROM total_rides
-JOIN total_moves m USING(month)
-```
-
-``` sql
-Divvybikes 2017
-
-WITH
-bike_cte AS                  /* Grab the rides in order */
-(SELECT Distinct bikeid, start_time, start_station_id as start, end_station_id as stop
-FROM divvybikes_2017
-ORDER BY bikeid,start_time),
-delay_cte AS         /* Grab the start position and the previous end position */
-(SELECT bikeid, start_time, start, LAG(stop, 1) OVER( Partition BY 1) as previous_stop
-FROM bike_cte),
-moved_bike AS     /* Was the bike moved or not */
-(SELECT bikeid, start_time, start, previous_stop, start!=previous_stop AS Moved
-FROM delay_cte),
-total_rides AS      /* Count all the rides */
-(SELECT date_part('month',start_time) AS month, count(*) AS number_of_rides
-FROM divvybikes_2017
-GROUP BY month
-ORDER BY month),
-total_moves AS     /* Count all the moves */
-(SELECT date_part('month',start_time) AS month, count(CASE WHEN moved THEN 1 END) AS number_of_moves
-FROM moved_bike
-GROUP BY month
-ORDER BY month)
--- Grab the monthly moves and total rides
-SELECT 
-m.month,
-number_of_moves,
-number_of_rides
-FROM total_rides
-JOIN total_moves m USING(month)
-```
-
-------------------------------------------------------------------------
-
-###### 6. *How far is a typical journey?*
-
-``` sql
-Bluebikes 2019
-
-WITH
-L1_bbikes_2019 AS 
-(SELECT 
-b.bike_id,
-b.start_time,
-b.start_station_id,
-b.end_station_id,
-s.latitude as ss_latitude,
-s.longtitude as ss_longitude
-FROM bluebikes_2019 b
-JOIN bluebikes_stations s ON b.start_station_id = s.id
-WHERE b.start_station_id != b.end_station_id)
-SELECT 
-AVG(calculate_distance(b.ss_latitude, b.ss_longitude, 
-                          e.latitude, e.longtitude, 
-                          'K')),
-     date_part('month',start_time) As month
-FROM L1_bbikes_2019 b
-JOIN bluebikes_stations e ON b.end_station_id = e.id
-Group by month
-Order by month
-
-Divvy Bikes 2019
-WITH
-L1_divvybikes_2019 AS 
-(SELECT 
-b.bikeid,
-b.start_time,
-b.start_station_id,
-b.end_station_id,
-s.latitude as ss_latitude,
-s.longitude as ss_longitude
-FROM divvybikes_2019 b
-JOIN divvy_stations s ON b.start_station_id = s.id
-WHERE b.start_station_id != b.end_station_id)
-SELECT 
-AVG(calculate_distance(b.ss_latitude, b.ss_longitude, 
-                          e.latitude, e.longitude, 
-                          'K')),
-     date_part('month',start_time) As month
-FROM L1_divvybikes_2019 b
-JOIN divvy_stations e ON b.end_station_id = e.id
-Group by month
-Order by month
-```
-
-------------------------------------------------------------------------
-
-###### 7. *How effective are subscription systems?*
-
-``` sql
-with
-----blubikes data for 2017 and  2018
-bluebikes_data_combined as (
-select bike_id,start_time,end_time,start_station_id,end_station_id,user_type
-from bluebikes_2017
-union
-select bike_id,start_time,end_time,start_station_id,end_station_id,user_type
-from bluebikes_2018 ),
-
-
-----baywheels data for 2017 and 2018 
-baywheels_data_combined as (
-select bike_id,start_time,end_time,start_station_id,end_station_id,user_type
-from baywheels_2017
-union
-select bike_id,start_time,end_time,start_station_id,end_station_id,user_type
-from baywheels_2018 ),
-
-
---- bike data for bluebikes and baywheels combined
-
-total_bike_data as (select bike_id,start_time,end_time,start_station_id,end_station_id,user_type,  'bluebikes' as company_name
-from bluebikes_data_combined
-union
-select bike_id,start_time,end_time,start_station_id,end_station_id,user_type,  'baywheels' as company_name
-from baywheels_data_combined)
-
-
------- counting no of trips taken by customers and subscribes in two diff companies.
-                select count(*) as no_of_trips,user_type,  company_name
-                from total_bike_data
-                group by user_type , company_name
-                order by no_of_trips
-```
+- How to run it: [docs/SETUP.md](docs/SETUP.md)
+- The seven questions with SQL and results: [docs/METHODOLOGY.md](docs/METHODOLOGY.md)
+- Data sources: [Divvybikes](https://divvy-tripdata.s3.amazonaws.com/index.html) and [Bluebikes](https://s3.amazonaws.com/hubway-data/index.html)
