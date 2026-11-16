@@ -1,5 +1,7 @@
 # How can bikeshare operators grow their subscriber base?
 
+![Cover](assets/cover.png)
+
 ![Total trips per month, Bluebikes and Divvy, 2017 to 2019](assets/monthly-trips.png)
 
 ## Project background
